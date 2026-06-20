@@ -1,10 +1,10 @@
 # Now Playing
 
-OpenCode TUI plugin that shows your currently playing track in the sidebar. Supports both Apple Music and Spotify.
+OpenCode TUI plugin that shows your currently playing track in the sidebar. Supports Apple Music and Spotify.
 
 ## Features
 
-- Shows now-playing info (track, artist, album) from **Apple Music** or **Spotify**
+- Shows now-playing info (track, artist, album) from Apple Music or Spotify
 - Album art rendered as ASCII in the sidebar via Python + Pillow
 - Progress bar with elapsed/total time
 - Playback controls (⏮ play/pause ⏭)
@@ -21,14 +21,14 @@ OpenCode TUI plugin that shows your currently playing track in the sidebar. Supp
 ## Installation
 
 ```sh
-opencode plugin add apple-music-now-playing
+opencode plugin add now-playing
 ```
 
 Or add manually to `~/.config/opencode/tui.json`:
 
 ```json
 {
-  "plugin": ["file:///path/to/apple-music-now-playing/plugin.tsx"]
+  "plugin": ["file:///path/to/now-playing/plugin.tsx"]
 }
 ```
 
