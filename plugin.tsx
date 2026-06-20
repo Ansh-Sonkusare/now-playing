@@ -4,6 +4,7 @@ import { createSignal, onCleanup, Show, For } from "solid-js"
 import { execFile } from "node:child_process"
 
 interface NowPlaying {
+  source: "Music" | "Spotify"
   state: "playing" | "paused"
   track: string
   artist: string
@@ -30,6 +31,61 @@ const PY_SCRIPT = [
   "  print(line)",
 ].join("\n")
 
+const JXA_QUERY = `
+function getMusicInfo() {
+  var app = Application("Music");
+  if (!app.running()) return null;
+  var state = app.playerState();
+  if (state !== "playing" && state !== "paused") return null;
+  var t = app.currentTrack;
+  return {
+    source: "Music",
+    state: state,
+    track: String(t.name()),
+    artist: String(t.artist()),
+    album: String(t.album()),
+    position: Number(app.playerPosition()),
+    duration: Number(t.duration()),
+    id: String(t.persistentID())
+  };
+}
+function getSpotifyInfo() {
+  var app = Application("Spotify");
+  if (!app.running()) return null;
+  var state = app.playerState();
+  if (state !== "playing" && state !== "paused") return null;
+  var t = app.currentTrack;
+  return {
+    source: "Spotify",
+    state: state,
+    track: String(t.name()),
+    artist: String(t.artist()),
+    album: String(t.album()),
+    position: Number(app.playerPosition()),
+    duration: Number(t.duration()) / 1000,
+    id: String(t.id()),
+    artworkUrl: String(t.artworkUrl())
+  };
+}
+var music = getMusicInfo();
+var spotify = getSpotifyInfo();
+var candidates = [music, spotify].filter(function(x) { return x !== null; });
+var playing = candidates.filter(function(c) { return c.state === "playing"; });
+var info = playing.length > 0 ? playing[0] : (candidates.length > 0 ? candidates[0] : null);
+if (info) console.log(JSON.stringify(info));
+`.trim()
+
+const ART_PATH = "/tmp/album-art-tmp.jpg"
+
+function jxa(script: string): Promise<string> {
+  return new Promise((resolve, reject) => {
+    execFile("osascript", ["-l", "JavaScript", "-e", script], { encoding: "utf-8", timeout: 5000 }, (err, stdout) => {
+      if (err) reject(err)
+      else resolve(stdout.trim())
+    })
+  })
+}
+
 function osa(script: string): Promise<string> {
   return new Promise((resolve, reject) => {
     execFile("osascript", ["-e", script], { encoding: "utf-8", timeout: 5000 }, (err, stdout) => {
@@ -48,61 +104,60 @@ function py(code: string, arg: string): Promise<string> {
   })
 }
 
-const ART_PATH = "/tmp/album-art-tmp.jpg"
-let lastTrack = ""
+let lastId = ""
 let cachedArt: string[] = []
+
+async function fetchArtwork(source: string, artworkUrl?: string): Promise<string[]> {
+  try {
+    if (source === "Music") {
+      const artScript = [
+        'tell application "Music"',
+        "  set art to artwork 1 of current track",
+        "  set artData to raw data of art",
+        `  set outFile to (POSIX file "${ART_PATH}")`,
+        "  set fileRef to open for access outFile with write permission",
+        "  write artData to fileRef",
+        "  close access fileRef",
+        "end tell",
+      ].join("\n")
+      await osa(artScript)
+    } else if (source === "Spotify" && artworkUrl) {
+      await new Promise<void>((resolve, reject) => {
+        execFile("curl", ["-sL", artworkUrl, "-o", ART_PATH], { encoding: "utf-8", timeout: 10000 }, (err) => {
+          if (err) reject(err)
+          else resolve()
+        })
+      })
+    }
+    const ascii = await py(PY_SCRIPT, ART_PATH)
+    return ascii.split("\n")
+  } catch {
+    return []
+  }
+}
 
 async function fetchNowPlaying(): Promise<NowPlaying | null> {
   try {
-    const script = [
-      'tell application "Music"',
-      "  if it is running then",
-      "    set playerState to player state as string",
-      '    if playerState is "playing" or playerState is "paused" then',
-      "      set t to name of current track",
-      "      set a to artist of current track",
-      "      set al to album of current track",
-      "      set pos to player position",
-      "      set dur to duration of current track",
-      "      return playerState & return & t & return & a & return & al & return & pos & return & dur",
-      "    end if",
-      "  end if",
-      "end tell",
-      'return ""',
-    ].join("\n")
-
-    const out = await osa(script)
+    const out = await jxa(JXA_QUERY)
     if (!out) return null
-    const [state, track, artist, album, pos, dur] = out.split("\r")
-    if (state !== "playing" && state !== "paused") return null
+    const raw = JSON.parse(out)
+    if (!raw.source || (raw.state !== "playing" && raw.state !== "paused")) return null
 
-    if (track !== lastTrack) {
-      lastTrack = track
+    const trackId = raw.id as string
+    if (trackId !== lastId) {
+      lastId = trackId
       cachedArt = []
-      try {
-        const artScript = [
-          'tell application "Music"',
-          "  set art to artwork 1 of current track",
-          "  set artData to raw data of art",
-          `  set outFile to (POSIX file "${ART_PATH}")`,
-          "  set fileRef to open for access outFile with write permission",
-          "  write artData to fileRef",
-          "  close access fileRef",
-          "end tell",
-        ].join("\n")
-        await osa(artScript)
-        const ascii = await py(PY_SCRIPT, ART_PATH)
-        cachedArt = ascii.split("\n")
-      } catch {}
+      cachedArt = await fetchArtwork(raw.source, raw.artworkUrl)
     }
 
     return {
-      state: state as NowPlaying["state"],
-      track,
-      artist,
-      album,
-      position: Number(pos) || 0,
-      duration: Number(dur) || 0,
+      source: raw.source,
+      state: raw.state,
+      track: String(raw.track),
+      artist: String(raw.artist),
+      album: String(raw.album),
+      position: Number(raw.position) || 0,
+      duration: Number(raw.duration) || 0,
       art: cachedArt,
     }
   } catch {
@@ -116,6 +171,8 @@ function fmt(s: number): string {
   return `${m}:${sec.toString().padStart(2, "0")}`
 }
 
+const SOURCE_ICON: Record<string, string> = { Music: "♫", Spotify: "◉" }
+
 function View(props: { api: TuiPluginApi }) {
   const [np, setNp] = createSignal<NowPlaying | null>(null)
   const theme = () => props.api.theme.current
@@ -126,14 +183,17 @@ function View(props: { api: TuiPluginApi }) {
   }, 2000)
   onCleanup(() => clearInterval(timer))
 
-  const playpause = () => { osa('tell application "Music" to playpause').catch(() => {}) }
-  const next = () => { osa('tell application "Music" to next track').catch(() => {}) }
-  const prev = () => { osa('tell application "Music" to previous track').catch(() => {}) }
+  const cur = () => np()?.source ?? "Music"
+  const playpause = () => osa(`tell application "${cur()}" to playpause`).catch(() => {})
+  const next = () => osa(`tell application "${cur()}" to next track`).catch(() => {})
+  const prev = () => osa(`tell application "${cur()}" to previous track`).catch(() => {})
 
   return (
     <box>
       <text fg={theme().text}>
-        <b>▶ Now Playing</b>
+        <Show when={np()} fallback={<><b>▶ Now Playing</b></>}>
+          {(data) => <><b>▶ {SOURCE_ICON[data().source] ?? "♫"} Now Playing</b></>}
+        </Show>
       </text>
       <Show when={np()}>
         {(data) => (
@@ -190,4 +250,4 @@ const tui: TuiPlugin = async (api) => {
   })
 }
 
-export default { id: "apple-music", tui }
+export default { id: "now-playing", tui }
