@@ -1,0 +1,16 @@
+{
+  "name": "apple-music-now-playing",
+  "version": "1.0.0",
+  "description": "Show currently playing Apple Music track in OpenCode TUI sidebar with album art",
+  "type": "module",
+  "exports": {
+    "./tui": "./plugin.tsx"
+  },
+  "keywords": ["opencode", "plugin", "apple-music", "tui"],
+  "license": "MIT",
+  "author": "",
+  "repository": {
+    "type": "git",
+    "url": ""
+  }
+}
