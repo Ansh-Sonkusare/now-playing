@@ -2,6 +2,8 @@
 
 OpenCode TUI plugin that shows your currently playing track in the sidebar. Supports Apple Music and Spotify.
 
+<img src="images/screenshot.png" width="33%">
+
 ## Features
 
 - Shows now-playing info (track, artist, album) from Apple Music or Spotify
