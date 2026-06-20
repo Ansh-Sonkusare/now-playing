@@ -175,6 +175,7 @@ const SOURCE_ICON: Record<string, string> = { Music: "♫", Spotify: "◉" }
 
 function View(props: { api: TuiPluginApi }) {
   const [np, setNp] = createSignal<NowPlaying | null>(null)
+  const [collapsed, setCollapsed] = createSignal(false)
   const [showArt, setShowArt] = createSignal(true)
   const theme = () => props.api.theme.current
 
@@ -192,16 +193,19 @@ function View(props: { api: TuiPluginApi }) {
   return (
     <box>
       <box flexDirection="row" gap={1}>
+        <text fg={theme().text} onMouseDown={() => setCollapsed(!collapsed())}>
+          {collapsed() ? "▶" : "▼"}
+        </text>
         <text fg={theme().text}>
-          <Show when={np()} fallback={<><b>▶ Now Playing</b></>}>
-            {(data) => <><b>▶ {SOURCE_ICON[data().source] ?? "♫"} Now Playing</b></>}
-          </Show>
+          <b>Now Playing</b>
         </text>
-        <text fg={theme().textMuted} onMouseDown={() => setShowArt(!showArt())}>
-          [{showArt() ? "a" : " "}]
-        </text>
+        <Show when={!collapsed()}>
+          <text fg={theme().textMuted} onMouseDown={() => setShowArt(!showArt())}>
+            [{showArt() ? "a" : " "}]
+          </text>
+        </Show>
       </box>
-      <Show when={np()}>
+      <Show when={!collapsed() && np()}>
         {(data) => (
           <>
             <Show when={showArt() && data().art.length > 0}>
@@ -226,7 +230,7 @@ function View(props: { api: TuiPluginApi }) {
           </>
         )}
       </Show>
-      <Show when={!np()}>
+      <Show when={!collapsed() && !np()}>
         <text fg={theme().textMuted}>No music playing</text>
       </Show>
     </box>

@@ -5,6 +5,7 @@ OpenCode TUI plugin that shows your currently playing track in the sidebar. Supp
 ## Features
 
 - Shows now-playing info (track, artist, album) from Apple Music or Spotify
+- Collapsible UI — click `▶`/`▼` to hide/show the entire plugin block
 - Album art rendered as ASCII in the sidebar via Python + Pillow (click `[a]` to toggle)
 - Progress bar with elapsed/total time
 - Playback controls (⏮ play/pause ⏭)
