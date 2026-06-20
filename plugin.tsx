@@ -175,6 +175,7 @@ const SOURCE_ICON: Record<string, string> = { Music: "♫", Spotify: "◉" }
 
 function View(props: { api: TuiPluginApi }) {
   const [np, setNp] = createSignal<NowPlaying | null>(null)
+  const [showArt, setShowArt] = createSignal(true)
   const theme = () => props.api.theme.current
 
   fetchNowPlaying().then(setNp)
@@ -190,15 +191,20 @@ function View(props: { api: TuiPluginApi }) {
 
   return (
     <box>
-      <text fg={theme().text}>
-        <Show when={np()} fallback={<><b>▶ Now Playing</b></>}>
-          {(data) => <><b>▶ {SOURCE_ICON[data().source] ?? "♫"} Now Playing</b></>}
-        </Show>
-      </text>
+      <box flexDirection="row" gap={1}>
+        <text fg={theme().text}>
+          <Show when={np()} fallback={<><b>▶ Now Playing</b></>}>
+            {(data) => <><b>▶ {SOURCE_ICON[data().source] ?? "♫"} Now Playing</b></>}
+          </Show>
+        </text>
+        <text fg={theme().textMuted} onMouseDown={() => setShowArt(!showArt())}>
+          [{showArt() ? "a" : " "}]
+        </text>
+      </box>
       <Show when={np()}>
         {(data) => (
           <>
-            <Show when={data().art.length > 0}>
+            <Show when={showArt() && data().art.length > 0}>
               <box>
                 <For each={data().art}>
                   {(line) => <text fg={theme().textMuted}>{line}</text>}
