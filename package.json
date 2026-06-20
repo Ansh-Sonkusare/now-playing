@@ -1,10 +1,13 @@
 {
-  "name": "now-playing",
+  "name": "@teakmirror113/now-playing",
   "version": "1.0.0",
   "description": "Show currently playing track (Apple Music / Spotify) in OpenCode TUI sidebar with album art",
   "type": "module",
   "exports": {
     "./tui": "./plugin.tsx"
+  },
+  "publishConfig": {
+    "access": "public"
   },
   "keywords": [
     "opencode",
@@ -13,8 +16,9 @@
     "spotify"
   ],
   "license": "MIT",
-  "author": "",
+  "author": "teakmirror113",
   "repository": {
-    "type": "git"
+    "type": "git",
+    "url": "git+https://github.com/Ansh-Sonkusare/now-playing.git"
   }
 }

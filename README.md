@@ -18,20 +18,20 @@ OpenCode TUI plugin that shows your currently playing track in the sidebar. Supp
 ## Requirements
 
 - macOS with Apple Music or Spotify
-- [OpenCode](https://opencode.ai) ≥ 1.1.2 with TUI enabled
+- [OpenCode](https://opencode.ai) with TUI enabled (`opencode tui enable`)
 - Python 3 with [Pillow](https://python-pillow.org/) (`pip3 install Pillow`)
 
 ## Installation
 
 ```sh
-opencode plugin add now-playing
+opencode plugin add @teakmirror113/now-playing
 ```
 
 Or add manually to `~/.config/opencode/tui.json`:
 
 ```json
 {
-  "plugin": ["file:///path/to/now-playing/plugin.tsx"]
+  "plugin": ["@teakmirror113/now-playing"]
 }
 ```
 
