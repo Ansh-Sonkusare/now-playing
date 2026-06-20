@@ -237,10 +237,12 @@ function View(props: { api: TuiPluginApi }) {
   )
 }
 
+const BAR_WIDTH = 24
+
 function ProgressBar(props: { pos: number; dur: number; fg: string }) {
   const pct = props.dur > 0 ? Math.min(Math.max(props.pos / props.dur, 0), 1) : 0
-  const filled = Math.floor(pct * 12)
-  const empty = 12 - filled
+  const filled = Math.floor(pct * BAR_WIDTH)
+  const empty = BAR_WIDTH - filled
   const bar = (filled > 0 ? "━".repeat(filled) : "") + (empty > 0 ? "─".repeat(empty) : "")
   return (
     <text fg={props.fg}>
