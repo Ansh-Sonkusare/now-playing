@@ -1,20 +1,21 @@
-# Apple Music Now Playing
+# Now Playing
 
-An OpenCode TUI plugin that shows your currently playing Apple Music track in the sidebar.
+OpenCode TUI plugin that shows your currently playing track in the sidebar. Supports both Apple Music and Spotify.
 
 ## Features
 
-- Shows now-playing info (track, artist) from Apple Music
-- Displays album art as ASCII in the sidebar
+- Shows now-playing info (track, artist, album) from **Apple Music** or **Spotify**
+- Album art rendered as ASCII in the sidebar via Python + Pillow
 - Progress bar with elapsed/total time
 - Playback controls (⏮ play/pause ⏭)
-- Polls every 2 seconds
-- Album art cached per track (only re-converts on track change)
+- 2-second polling for smooth progress updates
+- Prefers actively playing app when both are running
+- Caches album art per track (only re-converts on track change)
 
 ## Requirements
 
-- macOS with Apple Music app
-- [OpenCode](https://opencode.ai) with TUI enabled
+- macOS with Apple Music or Spotify
+- [OpenCode](https://opencode.ai) ≥ 1.1.2 with TUI enabled
 - Python 3 with [Pillow](https://python-pillow.org/) (`pip3 install Pillow`)
 
 ## Installation
@@ -30,6 +31,10 @@ Or add manually to `~/.config/opencode/tui.json`:
   "plugin": ["file:///path/to/apple-music-now-playing/plugin.tsx"]
 }
 ```
+
+## How it works
+
+Uses `osascript` (JXA) to query Music.app and Spotify simultaneously. If one app is actively playing while the other is paused, the playing app takes priority. Album art is extracted via AppleScript (Music) or downloaded via `curl` (Spotify), then converted to grayscale ASCII using Python Pillow.
 
 ## License
 
