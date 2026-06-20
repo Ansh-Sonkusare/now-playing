@@ -79,9 +79,9 @@ const ART_PATH = "/tmp/album-art-tmp.jpg"
 
 function jxa(script: string): Promise<string> {
   return new Promise((resolve, reject) => {
-    execFile("osascript", ["-l", "JavaScript", "-e", script], { encoding: "utf-8", timeout: 5000 }, (err, stdout) => {
+    execFile("osascript", ["-l", "JavaScript", "-e", script], { encoding: "utf-8", timeout: 5000 }, (err, stdout, stderr) => {
       if (err) reject(err)
-      else resolve(stdout.trim())
+      else resolve((stderr || stdout).trim())
     })
   })
 }
