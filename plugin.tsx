@@ -22,7 +22,7 @@ const PY_SCRIPT = [
   "w, h = 36, 18",
   "img = img.resize((w, h), Image.LANCZOS)",
   'img = img.convert("L")',
-  'chars = " .-:=+*#%@"',
+  'chars = "\u00b7-:=+*#%@"',
   "for y in range(h):",
   '  line = ""',
   "  for x in range(w):",
